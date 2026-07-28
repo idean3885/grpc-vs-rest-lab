@@ -1,0 +1,6 @@
+apply from: rootProject.file('gradle/domain.gradle')
+apply from: rootProject.file('gradle/lib/lombok.gradle')
+
+dependencies {
+  implementation project(':identity-api')
+}

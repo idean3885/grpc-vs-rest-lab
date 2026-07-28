@@ -1,0 +1,30 @@
+spring:
+  application:
+    name: identity-server
+
+server:
+  port: 8080
+  tomcat:
+    threads:
+      max: 200
+      min-spare: 20
+    max-keep-alive-requests: -1
+    keep-alive-timeout: 60s
+
+profile:
+  client:
+    rest-base-url: http://localhost:8081
+    grpc-host: localhost
+    grpc-port: 9090
+    # 톰캣 워커 수와 맞춘다. 풀이 워커보다 작으면 REST 쪽이 커넥션 대기로 밀린다.
+    max-connections: 200
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
+logging:
+  level:
+    io.github.idean3885: INFO

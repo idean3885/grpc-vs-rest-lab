@@ -1,0 +1,15 @@
+apply from: rootProject.file('gradle/adapter.gradle')
+apply from: rootProject.file('gradle/lib/lombok.gradle')
+apply from: rootProject.file('gradle/lib/http-interface.gradle')
+
+dependencies {
+  implementation project(':identity-api')
+  implementation project(':identity-core')
+
+  // gRPC 아웃바운드 어댑터용 생성 스텁
+  implementation project(':proto')
+
+  // REST 커넥션 풀을 명시적으로 잡기 위한 Apache HttpClient5.
+  // 기본 요청 팩토리로는 풀 크기를 통제할 수 없어 gRPC 채널과 조건을 맞출 수 없다.
+  implementation 'org.apache.httpcomponents.client5:httpclient5'
+}

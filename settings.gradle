@@ -31,5 +31,16 @@ project(':profile-core').projectDir = file('profile/core')
 include 'profile-adapter'
 project(':profile-adapter').projectDir = file('profile/adapter')
 
+// identity — 호출 서비스 도메인
+include 'identity-api'
+project(':identity-api').projectDir = file('identity/api')
+
+include 'identity-core'
+project(':identity-core').projectDir = file('identity/core')
+
+include 'identity-adapter'
+project(':identity-adapter').projectDir = file('identity/adapter')
+
 // 실행 모듈
 include 'profile-server'
+include 'identity-server'

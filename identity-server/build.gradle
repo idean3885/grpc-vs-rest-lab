@@ -1,0 +1,7 @@
+apply from: rootProject.file('gradle/server.gradle')
+
+dependencies {
+  implementation project(':identity-api')
+  implementation project(':identity-core')
+  implementation project(':identity-adapter')
+}
