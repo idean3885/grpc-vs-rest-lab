@@ -1,0 +1,35 @@
+// === Plugin 버전 중앙 관리 ===
+pluginManagement {
+  plugins {
+    id 'org.springframework.boot' version settings.ext['spring-boot.version']
+    id 'com.google.protobuf' version settings.ext['protobuf-plugin.version']
+  }
+}
+
+settings.ext['spring-boot.version'] = providers.gradleProperty('spring-boot.version').get()
+settings.ext['protobuf-plugin.version'] = providers.gradleProperty('protobuf-plugin.version').get()
+
+buildCache {
+  local {
+    enabled = true
+    directory = new File(rootDir, '.gradle/build-cache')
+  }
+}
+
+rootProject.name = 'grpc-vs-rest-lab'
+
+// proto — .proto SSOT + Java 스텁 생성
+include 'proto'
+
+// profile — 피호출 서비스 도메인
+include 'profile-api'
+project(':profile-api').projectDir = file('profile/api')
+
+include 'profile-core'
+project(':profile-core').projectDir = file('profile/core')
+
+include 'profile-adapter'
+project(':profile-adapter').projectDir = file('profile/adapter')
+
+// 실행 모듈
+include 'profile-server'

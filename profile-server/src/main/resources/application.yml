@@ -1,0 +1,31 @@
+spring:
+  application:
+    name: profile-server
+  jackson:
+    default-property-inclusion: always
+
+server:
+  port: 8081
+  tomcat:
+    threads:
+      max: 200
+      min-spare: 20
+    # keep-alive 를 끄면 REST 쪽이 매 요청 TCP 핸드셰이크를 하게 되어 비교가 성립하지 않는다.
+    # 기본값이 유지(100 요청)이며, 벤치마크에서는 넉넉히 올려 커넥션 재사용을 보장한다.
+    max-keep-alive-requests: -1
+    keep-alive-timeout: 60s
+
+grpc:
+  server:
+    port: 9090
+    reflection-enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
+logging:
+  level:
+    io.github.idean3885: INFO

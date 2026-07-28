@@ -1,0 +1,7 @@
+apply from: rootProject.file('gradle/server.gradle')
+
+dependencies {
+  implementation project(':profile-api')
+  implementation project(':profile-core')
+  implementation project(':profile-adapter')
+}

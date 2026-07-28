@@ -1,0 +1,13 @@
+apply from: rootProject.file('gradle/adapter.gradle')
+apply from: rootProject.file('gradle/lib/lombok.gradle')
+
+dependencies {
+  implementation project(':profile-api')
+  implementation project(':profile-core')
+
+  // gRPC 인바운드 어댑터용 생성 스텁
+  implementation project(':proto')
+
+  // 서버 리플렉션 (grpcurl, k6 가 .proto 없이 호출)
+  implementation "io.grpc:grpc-services"
+}

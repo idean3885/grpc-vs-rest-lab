@@ -1,0 +1,52 @@
+plugins {
+  id 'com.google.protobuf'
+}
+
+apply plugin: 'java-library'
+apply plugin: 'idea'
+apply plugin: 'io.spring.dependency-management'
+
+sourceCompatibility = '17'
+
+dependencyManagement {
+  imports {
+    mavenBom "org.springframework.boot:spring-boot-dependencies:${property('spring-boot.version')}"
+  }
+}
+
+dependencies {
+  // 스텁을 쓰는 모듈이 함께 받아야 하는 의존성이므로 api 로 노출한다.
+  api "io.grpc:grpc-protobuf"
+  api "io.grpc:grpc-stub"
+  api "io.grpc:grpc-netty-shaded"
+  api "com.google.protobuf:protobuf-java"
+  api "com.google.protobuf:protobuf-java-util"
+
+  // google/api/annotations.proto (grpc-gateway 의 http 옵션) import 해결용.
+  // protobuf-gradle-plugin 이 이 jar 안의 .proto 를 추출해 include path 에 넣는다.
+  api "com.google.api.grpc:proto-google-common-protos:${property('common-protos.version')}"
+
+  // 생성 코드가 참조하는 javax.annotation.Generated. Java 9+ 에서 JDK 에 없다.
+  compileOnly 'org.apache.tomcat:annotations-api:6.0.53'
+}
+
+protobuf {
+  protoc {
+    artifact = "com.google.protobuf:protoc:${property('protobuf.version')}"
+  }
+  plugins {
+    grpc {
+      artifact = "io.grpc:protoc-gen-grpc-java:${property('grpc.version')}"
+    }
+  }
+  generateProtoTasks {
+    all()*.plugins {
+      grpc {}
+    }
+  }
+}
+
+// 생성 코드에는 포맷 규약을 적용하지 않는다.
+tasks.withType(JavaCompile) {
+  options.compilerArgs.add("-Xlint:none")
+}

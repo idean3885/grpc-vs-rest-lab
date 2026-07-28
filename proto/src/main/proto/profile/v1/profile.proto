@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+package profile.v1;
+
+import "google/api/annotations.proto";
+
+option java_package = "io.github.idean3885.grpclab.profile.grpc";
+option java_multiple_files = true;
+option java_outer_classname = "ProfileProto";
+option go_package = "github.com/idean3885/grpc-vs-rest-lab/gateway/gen/profile/v1;profilev1";
+
+// 프로필 조회 서비스.
+//
+// google.api.http 옵션은 grpc-gateway 가 리버스 프록시를 생성할 때만 읽는다.
+// Java 서버는 이 옵션을 무시하고 rpc 만 구현하므로, 게이트웨이 도입 여부가
+// 서버 구현에 영향을 주지 않는다.
+service ProfileService {
+  // 단건 조회. 최소 페이로드 측정용.
+  rpc GetProfile(GetProfileRequest) returns (Profile) {
+    option (google.api.http) = {
+      get: "/v1/profiles/{user_id}"
+    };
+  }
+
+  // 다건 조회. size 로 페이로드 크기를 조절해 직렬화 비용 곡선을 측정한다.
+  rpc ListProfiles(ListProfilesRequest) returns (ListProfilesResponse) {
+    option (google.api.http) = {
+      get: "/v1/profiles"
+    };
+  }
+
+  // 서버 스트리밍. 다건을 한 응답으로 모으지 않고 흘려보낼 때의 차이 측정용.
+  rpc StreamProfiles(ListProfilesRequest) returns (stream Profile) {
+    option (google.api.http) = {
+      get: "/v1/profiles:stream"
+    };
+  }
+}
+
+message GetProfileRequest {
+  string user_id = 1;
+}
+
+message ListProfilesRequest {
+  // 조회 건수. 페이로드 크기 축.
+  int32 size = 1;
+}
+
+message ListProfilesResponse {
+  repeated Profile profiles = 1;
+  int32 total = 2;
+}
+
+message Profile {
+  string user_id = 1;
+  string nickname = 2;
+  string region = 3;
+  int32 trust_score = 4;
+  bool verified = 5;
+  // epoch milli. 프로토버프에 시간 타입을 넣을 때의 선택지를 단순화했다.
+  int64 joined_at = 6;
+}

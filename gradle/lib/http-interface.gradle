@@ -1,0 +1,5 @@
+// Spring 6.1+ HTTP Interface (RestClient 기반)
+// @HttpExchange, HttpServiceProxyFactory, RestClientAdapter 사용을 위한 의존성
+dependencies {
+  implementation 'org.springframework:spring-web'
+}
