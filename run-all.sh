@@ -19,7 +19,7 @@ wait_http() {
   if curl -s --retry 90 --retry-delay 1 --retry-connrefused --max-time 150 -o /dev/null "$url"; then
     echo "  ✓ $name"
   else
-    echo "  ✗ $name — 로그 확인: $RUN_DIR/" >&2
+    echo "  ✗ $name (로그 확인: $RUN_DIR/)" >&2
     return 1
   fi
 }
@@ -35,7 +35,10 @@ fi
 if listening 8081; then
   echo "  · profile-server 이미 기동"
 else
-  echo "▶ profile-server (8081 REST, 9090 gRPC)"
+  # VIRTUAL_THREADS=true 로 기동하면 Tomcat 이 요청당 가상 스레드로 처리한다.
+  # gRPC 경로(Netty)는 영향받지 않으므로 REST 축만 갈린다. bench/measure.sh 가
+  # 스레드 덤프에서 모드를 판정해 결과 파일명에 반영한다.
+  echo "▶ profile-server (8081 REST, 9090 gRPC) · 가상 스레드 ${VIRTUAL_THREADS:-false}"
   nohup java -jar profile-server/build/libs/profile-server-0.0.1-SNAPSHOT.jar \
     > "$RUN_DIR/profile-server.log" 2>&1 &
   disown
@@ -99,7 +102,7 @@ cat <<'MSG'
   서비스 간 호출  http://localhost:8080/api/v1/me/rest?size=100
                   http://localhost:8080/api/v1/me/grpc?size=100
 
-  벤치마크        cd bench && ./run.sh layer2
+  벤치마크        cd bench && ./run.sh service
 
   종료            ./stop-all.sh
 MSG

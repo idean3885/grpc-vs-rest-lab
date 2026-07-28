@@ -6,7 +6,7 @@ apply plugin: 'java-library'
 apply plugin: 'idea'
 apply plugin: 'io.spring.dependency-management'
 
-sourceCompatibility = '17'
+sourceCompatibility = '21'
 
 dependencyManagement {
   imports {

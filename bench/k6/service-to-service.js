@@ -2,12 +2,12 @@ import http from 'k6/http';
 import { check } from 'k6';
 import { Trend } from 'k6/metrics';
 
-// 서비스 간 호출 측정 (층 2).
+// 경유 측정: 애플리케이션을 거쳐 서비스 간 호출을 잰다.
 //
 // identity-server 가 RestClient 선언형 인터페이스와 gRPC 스텁으로 각각 profile-server 를
 // 호출한다. k6 는 identity-server 의 얇은 요약 응답만 받으므로, k6 측 역직렬화 비용이
-// 양쪽에 동일하게 걸린다. 층 1(프로토콜 직접 측정)에서 k6 의 프로토버프 파싱 비용이
-// gRPC 쪽에만 얹히던 문제를 이 층에서 제거한다.
+// 양쪽에 동일하게 걸린다. 직접 측정에서 k6 의 프로토버프 파싱 비용이 gRPC 쪽에만
+// 얹히던 문제를 이렇게 제거한다.
 //
 // TRANSPORT: rest | grpc
 const TRANSPORT = __ENV.TRANSPORT || 'rest';

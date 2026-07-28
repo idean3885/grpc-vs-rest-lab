@@ -3,6 +3,13 @@ spring:
     name: profile-server
   jackson:
     default-property-inclusion: always
+  threads:
+    # 가상 스레드 축. 켜면 Tomcat 이 요청당 가상 스레드로 처리한다.
+    # gRPC 경로는 Netty 이벤트 루프라 이 값에 영향받지 않으므로, 이 플래그가
+    # 바꾸는 것은 REST 경로뿐이다. 그래서 REST(플랫폼) · REST(가상) · gRPC
+    # 세 축을 같은 빌드로 비교할 수 있다.
+    virtual:
+      enabled: ${VIRTUAL_THREADS:false}
 
 server:
   port: 8081

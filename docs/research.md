@@ -98,3 +98,29 @@ Envoy 를 쓰는 것은 스택상으로도 자연스럽다. Istio 의 데이터�
 - **DB 유무.** DB 왕복이 수 밀리초면 프로토콜 오버헤드 차이는 상대적으로 미미해진다.
 
 그래서 이 랩은 조건을 명시하고, 조건별 수치를 따로 보고한다.
+
+## 4. 서비스 메시가 있어도 게이트웨이는 중복이 아니다
+
+Envoy 에 `grpc_json_transcoder` 내장 필터가 있어 grpc-gateway 와 기능상 같은 일을 한다. 서비스 메시(Istio)의 데이터플레인이 Envoy 이므로, 메시를 쓰는 환경에서 게이트웨이를 따로 두면 프록시가 둘인 중복처럼 보인다.
+
+**중복이 아니다. 계층이 다르다.** grpc-gateway 는 프록시가 아니라 **빌드 시 생성되는 코드**다. Go 에서는 게이트웨이 mux 를 gRPC 서버와 같은 바이너리에 컴파일하는 것이 표준 패턴이고, 두 goroutine 이 한 프로세스에서 포트를 나눠 연다. 배포 단위가 늘지 않는다. 이 랩이 Go 프로세스를 따로 띄운 것은 애플리케이션이 Java 라서 선택지가 없었기 때문이다.
+
+| | grpc-gateway | Envoy transcoder |
+|---|---|---|
+| 실체 | 생성 코드 (라이브러리) | 프록시 내장 필터 |
+| 배포 단위 | 늘지 않음 | 사이드카 설정 |
+| 계약 주입 | 서비스와 함께 배포 | 컴파일된 descriptor 를 프록시 설정에 |
+| 계약 변경 시 | 서비스만 재배포 | 메시 설정 갱신 |
+| 소유권 | 서비스 팀 | 플랫폼 팀 |
+
+**관리 리소스가 늘어나는 쪽은 메시 경로다.** 세 가지가 걸린다.
+
+1. **1급 API 가 없다.** Istio 는 `EnvoyFilter` CRD 로만 가능하고, Istio 자신이 이를 escape hatch·alpha API 로 규정한다. xDS 생성 구현 세부에 결합되어 있어 번들 Envoy 버전이 오르면 조용히 깨질 수 있고, 특정 버전 고정을 권고한다.
+2. **descriptor 배달이 까다롭다.** Envoy 는 `.proto` 를 직접 읽지 않고 컴파일된 descriptor set 이 필요하다. 파일 마운트는 사이드카 주입이 동적이지 않아 배포 타이밍 제어가 어렵고, base64 로 인라인하면 k8s 애노테이션 256KB 제한에 걸린다.
+3. **계약마다 인프라 리소스가 생긴다.** 계약 변경이 인프라 변경 요청으로 바뀐다.
+
+**그럼 메시는 왜 두는가.** 트랜스코딩과 무관하게 gRPC 자체가 메시를 필요로 한다. HTTP/2 는 커넥션을 오래 유지하며 다중화하므로 L4 로드밸런싱은 커넥션 단위가 되어 백엔드 편중이 생긴다. Envoy 가 요청 단위 L7 밸런싱으로 이를 푼다. 여기에 mTLS·재시도·타임아웃·관측이 붙는다. **역할이 겹치는 것이 아니라 기능 하나만 양쪽에 있고, 그중 인프라 쪽을 안 쓰는 구성이다.**
+
+참고로 이 랩이 Envoy 를 넣은 목적은 트랜스코딩이 아니다. 직접 구현한 grpc-web 프록시가 표준과 같은 프레임을 내는지 대조하는 용도다.
+
+출처: [Envoy grpc_json_transcoder](https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_filters/grpc_json_transcoder_filter) · [grpc-gateway 튜토리얼](https://grpc-ecosystem.github.io/grpc-gateway/docs/tutorials/adding_annotations/) · [tetratelabs/istio-tools grpc-transcoder](https://github.com/tetratelabs/istio-tools/blob/master/grpc-transcoder/README.md) · [Istio 1.9 upgrade notes](https://istio.io/latest/news/releases/1.9.x/announcing-1.9/upgrade-notes/) · [istio#18371](https://github.com/istio/istio/issues/18371)

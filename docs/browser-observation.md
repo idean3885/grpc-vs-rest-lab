@@ -88,6 +88,19 @@ protojson 이 64비트 정수를 문자열로 인코딩하는 것은 표준 동�
 └───────────────── flag 0x80 (trailer)
 ```
 
+브라우저 없이 프레임을 직접 만들어 보면 포맷이 더 분명해진다. 요청 본문도 같은 규칙을 따른다.
+
+```bash
+# ListProfilesRequest{size: 3} 을 grpc-web 프레임으로 감싸 보낸다
+#   앞 5바이트 = [flag 0x00][길이 4바이트 BE]
+#   0x08 = 필드 1 varint 태그, 0x03 = size 값
+printf '\x00\x00\x00\x00\x02\x08\x03' | curl -X POST \
+  -H 'Content-Type: application/grpc-web+proto' --data-binary @- \
+  "http://localhost:8091/profile.v1.ProfileService/ListProfiles" | xxd | head
+```
+
+페이로드가 2바이트(`08 03`)뿐인데 프레임 헤더가 5바이트다. **단건 요청에서 gRPC 가 이득을 못 보는 이유가 이 고정 비용에서 눈으로 보인다.**
+
 ### 4. base64 모드는 이득의 1/3을 반납한다
 
 4 번은 같은 바이트를 base64 로 감싼 것이다. 5,086 → 6,784 바이트로 33% 늘어난다. base64 가 3 바이트를 4 문자로 바꾸므로 정확히 4/3 배다.

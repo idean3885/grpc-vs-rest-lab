@@ -2,8 +2,8 @@
 # 벤치마크 실행. 워밍업을 본 측정과 분리한다.
 #
 # 사용법:
-#   ./run.sh layer1          프로토콜 직접 측정 (REST 8081 vs gRPC 9090)
-#   ./run.sh layer2          서비스 간 호출 측정 (identity-server 8080 경유)
+#   ./run.sh direct          프로토콜 직접 측정 (REST 8081 vs gRPC 9090)
+#   ./run.sh service         서비스 간 호출 측정 (identity-server 8080 경유)
 #   ./run.sh all
 set -euo pipefail
 
@@ -30,23 +30,23 @@ run_one() {
   echo
 }
 
-layer1() {
+direct() {
   for size in $SIZES; do
-    run_one "layer1-rest-size${size}" k6/rest.js "SIZE=$size"
-    run_one "layer1-grpc-size${size}" k6/grpc.js "SIZE=$size"
+    run_one "direct-rest-size${size}" k6/rest.js "SIZE=$size"
+    run_one "direct-grpc-size${size}" k6/grpc.js "SIZE=$size"
   done
 }
 
-layer2() {
+service() {
   for size in $SIZES; do
-    run_one "layer2-rest-size${size}" k6/service-to-service.js "TRANSPORT=rest" "SIZE=$size"
-    run_one "layer2-grpc-size${size}" k6/service-to-service.js "TRANSPORT=grpc" "SIZE=$size"
+    run_one "service-rest-size${size}" k6/service-to-service.js "TRANSPORT=rest" "SIZE=$size"
+    run_one "service-grpc-size${size}" k6/service-to-service.js "TRANSPORT=grpc" "SIZE=$size"
   done
 }
 
 case "${1:-all}" in
-  layer1) layer1 ;;
-  layer2) layer2 ;;
-  all) layer1; layer2 ;;
-  *) echo "usage: $0 [layer1|layer2|all]" >&2; exit 1 ;;
+  direct) direct ;;
+  service) service ;;
+  all) direct; service ;;
+  *) echo "usage: $0 [direct|service|all]" >&2; exit 1 ;;
 esac

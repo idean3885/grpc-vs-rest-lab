@@ -1,6 +1,12 @@
 spring:
   application:
     name: identity-server
+  threads:
+    # 호출 측은 전 구간 플랫폼 스레드로 고정한다. 여기에 가상 스레드를 켜면
+    # REST 와 gRPC 두 경로에 똑같이 걸려서 측정 축이 흐려진다. 상수로 둬야
+    # 상류 프로토콜 차이만 남는다.
+    virtual:
+      enabled: false
 
 server:
   port: 8080
