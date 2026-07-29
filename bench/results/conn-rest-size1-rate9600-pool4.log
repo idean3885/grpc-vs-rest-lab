@@ -1,0 +1,97 @@
+
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+
+
+     execution: local
+        script: k6/service-to-service.js
+        output: -
+
+     scenarios: (100.00%) 1 scenario, 400 max VUs, 45s max duration (incl. graceful stop):
+              * openLoop: 9600.00 iterations/s for 15s (maxVUs: 50-400, gracefulStop: 30s)
+
+
+running (01.0s), 003/055 VUs, 9530 complete and 0 interrupted iterations
+openLoop   [   7% ] 003/055 VUs  01.0s/15s  9600.00 iters/s
+
+running (02.0s), 003/098 VUs, 18600 complete and 0 interrupted iterations
+openLoop   [  13% ] 003/098 VUs  02.0s/15s  9600.00 iters/s
+
+running (03.0s), 003/098 VUs, 28199 complete and 0 interrupted iterations
+openLoop   [  20% ] 003/098 VUs  03.0s/15s  9600.00 iters/s
+
+running (04.0s), 002/198 VUs, 37399 complete and 0 interrupted iterations
+openLoop   [  27% ] 002/198 VUs  04.0s/15s  9600.00 iters/s
+
+running (05.0s), 003/198 VUs, 46998 complete and 0 interrupted iterations
+openLoop   [  33% ] 003/198 VUs  05.0s/15s  9600.00 iters/s
+
+running (06.0s), 370/372 VUs, 55157 complete and 0 interrupted iterations
+openLoop   [  40% ] 370/372 VUs  06.0s/15s  9600.00 iters/s
+time="2026-07-29T17:05:09+09:00" level=warning msg="Insufficient VUs, reached 400 active VUs and cannot initialize more" executor=constant-arrival-rate scenario=openLoop
+
+running (07.0s), 002/400 VUs, 64774 complete and 0 interrupted iterations
+openLoop   [  47% ] 002/400 VUs  07.0s/15s  9600.00 iters/s
+
+running (08.0s), 025/400 VUs, 74361 complete and 0 interrupted iterations
+openLoop   [  53% ] 025/400 VUs  08.0s/15s  9600.00 iters/s
+
+running (09.0s), 002/400 VUs, 83912 complete and 0 interrupted iterations
+openLoop   [  60% ] 001/400 VUs  09.0s/15s  9600.00 iters/s
+
+running (10.0s), 002/400 VUs, 93086 complete and 0 interrupted iterations
+openLoop   [  67% ] 002/400 VUs  10.0s/15s  9600.00 iters/s
+
+running (11.0s), 396/400 VUs, 100743 complete and 0 interrupted iterations
+openLoop   [  73% ] 396/400 VUs  11.0s/15s  9600.00 iters/s
+
+running (12.0s), 222/400 VUs, 109396 complete and 0 interrupted iterations
+openLoop   [  80% ] 222/400 VUs  12.0s/15s  9600.00 iters/s
+
+running (13.0s), 002/400 VUs, 119086 complete and 0 interrupted iterations
+openLoop   [  87% ] 002/400 VUs  13.0s/15s  9600.00 iters/s
+
+running (14.0s), 070/400 VUs, 128618 complete and 0 interrupted iterations
+openLoop   [  93% ] 070/400 VUs  14.0s/15s  9600.00 iters/s
+
+running (15.0s), 002/400 VUs, 137946 complete and 0 interrupted iterations
+openLoop   [ 100% ] 002/400 VUs  15.0s/15s  9600.00 iters/s
+
+
+  █ TOTAL RESULTS 
+
+    checks_total.......: 276014  18399.013703/s
+    checks_succeeded...: 100.00% 276014 out of 276014
+    checks_failed......: 0.00%   0 out of 276014
+
+    ✓ status 200
+    ✓ count matches
+
+    CUSTOM
+    upstream_micros................: avg=5391.673248 min=46       med=107      max=91567    p(90)=18322   p(95)=33848.4
+
+    HTTP
+    http_req_duration..............: avg=6.49ms      min=94µs     med=222µs    max=120.04ms p(90)=22.37ms p(95)=43.9ms 
+      { expected_response:true }...: avg=6.49ms      min=94µs     med=222µs    max=120.04ms p(90)=22.37ms p(95)=43.9ms 
+    http_req_failed................: 0.00%  0 out of 138007
+    http_reqs......................: 138007 9199.506851/s
+
+    EXECUTION
+    dropped_iterations.............: 5997   399.758292/s
+    iteration_duration.............: avg=6.55ms      min=117.75µs med=266.75µs max=120.16ms p(90)=22.44ms p(95)=44.06ms
+    iterations.....................: 138007 9199.506851/s
+    vus............................: 3      min=2           max=396
+    vus_max........................: 400    min=55          max=400
+
+    NETWORK
+    data_received..................: 34 MB  2.3 MB/s
+    data_sent......................: 13 MB  837 kB/s
+
+
+
+
+running (15.0s), 000/400 VUs, 138007 complete and 0 interrupted iterations
+openLoop ✓ [ 100% ] 000/400 VUs  15s  9600.00 iters/s

@@ -11,6 +11,14 @@ cd "$(dirname "$0")"
 RUN_DIR=.run
 mkdir -p "$RUN_DIR"
 
+# Java 21 런타임을 명시적으로 고른다. PATH 의 java 가 그보다 낮으면 jar 가 뜨지 않고
+# UnsupportedClassVersionError 로 죽는다. JDK 를 여러 개 깔아 둔 환경에서 재현이 깨지는 지점이다.
+JAVA_BIN=java
+if [ -x /usr/libexec/java_home ]; then
+  JAVA_21_HOME=$(/usr/libexec/java_home -v 21 2>/dev/null || true)
+  [ -n "$JAVA_21_HOME" ] && JAVA_BIN="$JAVA_21_HOME/bin/java"
+fi
+
 listening() { lsof -ti:"$1" -sTCP:LISTEN >/dev/null 2>&1; }
 
 # 포트가 열릴 때까지 기다린다. sleep 대신 curl 재시도를 쓴다.
@@ -39,7 +47,7 @@ else
   # gRPC 경로(Netty)는 영향받지 않으므로 REST 축만 갈린다. bench/measure.sh 가
   # 스레드 덤프에서 모드를 판정해 결과 파일명에 반영한다.
   echo "▶ profile-server (8081 REST, 9090 gRPC) · 가상 스레드 ${VIRTUAL_THREADS:-false}"
-  nohup java -jar profile-server/build/libs/profile-server-0.0.1-SNAPSHOT.jar \
+  nohup "$JAVA_BIN" -jar profile-server/build/libs/profile-server-0.0.1-SNAPSHOT.jar \
     > "$RUN_DIR/profile-server.log" 2>&1 &
   disown
   wait_http http://localhost:8081/actuator/health "profile-server"
@@ -50,7 +58,7 @@ if listening 8080; then
   echo "  · identity-server 이미 기동"
 else
   echo "▶ identity-server (8080)"
-  nohup java -jar identity-server/build/libs/identity-server-0.0.1-SNAPSHOT.jar \
+  nohup "$JAVA_BIN" -jar identity-server/build/libs/identity-server-0.0.1-SNAPSHOT.jar \
     > "$RUN_DIR/identity-server.log" 2>&1 &
   disown
   wait_http http://localhost:8080/actuator/health "identity-server"

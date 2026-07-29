@@ -20,13 +20,41 @@ const BASE = __ENV.BASE || 'http://localhost:8080';
 // 1000배 부풀려 표시된다.
 const upstream = new Trend('upstream_micros');
 
-export const options = {
-  vus: Number(__ENV.VUS || 50),
-  duration: __ENV.DURATION || '30s',
-  thresholds: {
-    checks: ['rate>0.99'],
-  },
-};
+// 실행 모델을 두 가지로 나눈다.
+//
+// RATE 없음 (닫힌 루프): VU 수를 고정하고 응답이 오는 대로 다음 요청을 던진다. 처리량
+//   상한을 찾는 데 맞지만, 서버가 느려지면 부하도 같이 줄어들어 과부하 구간의 지연을
+//   보지 못한다. 정본 3축 회차가 이 모델이다.
+//
+// RATE 지정 (열린 루프): 요청률을 고정하고 응답 여부와 무관하게 계속 도착시킨다. 서버가
+//   따라오지 못하면 지연과 실패로 나타나므로 "무엇이 먼저 마르는가" 를 볼 수 있다.
+//   커넥션 예산을 낮춰 재는 회차에 쓴다.
+const RATE = Number(__ENV.RATE || 0);
+
+export const options =
+  RATE > 0
+    ? {
+        scenarios: {
+          openLoop: {
+            executor: 'constant-arrival-rate',
+            rate: RATE,
+            timeUnit: '1s',
+            duration: __ENV.DURATION || '15s',
+            preAllocatedVUs: Number(__ENV.PRE_VUS || 50),
+            // 재사용 가능한 VU 상한. 응답이 밀려 VU 가 모두 점유되면 k6 가 요청을
+            // 버리고 dropped_iterations 로 센다. 그 값이 과부하 지표가 된다.
+            maxVUs: Number(__ENV.MAX_VUS || 400),
+          },
+        },
+        // 과부하를 만드는 것이 목적이라 임계값을 걸지 않는다. 실패율 자체가 관측 대상이다.
+      }
+    : {
+        vus: Number(__ENV.VUS || 50),
+        duration: __ENV.DURATION || '30s',
+        thresholds: {
+          checks: ['rate>0.99'],
+        },
+      };
 
 export default function () {
   const res = http.get(`${BASE}/api/v1/me/${TRANSPORT}?size=${SIZE}`, {

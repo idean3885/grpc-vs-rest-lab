@@ -28,6 +28,14 @@ VUS=${VUS:-50}
 DURATION=${DURATION:-30s}
 WARMUP=${WARMUP:-10s}
 
+# 열린 루프 회차 설정. RATE 를 주면 요청률 고정 모델로 갈린다 (k6 스크립트 주석 참조).
+# POOL 은 파일명에 남기는 라벨이다. 실제 풀 크기는 identity-server 기동 환경변수로 정해지므로
+# 부하 중 커넥션 스냅샷이 이 라벨을 검증하는 값이 된다.
+RATE=${RATE:-0}
+POOL=${POOL:-}
+PRE_VUS=${PRE_VUS:-50}
+MAX_VUS=${MAX_VUS:-400}
+
 REST_PORT=8081
 GRPC_PORT=9090
 [ "$TRANSPORT" = "grpc" ] && TARGET_PORT=$GRPC_PORT || TARGET_PORT=$REST_PORT
@@ -59,7 +67,13 @@ LABEL=$TRANSPORT
 if [ "$TRANSPORT" != "grpc" ] && [ "$THREAD_MODE" = "virtual" ]; then
   LABEL="${TRANSPORT}-vt"
 fi
-RESULT="results/${LABEL}-size${SIZE}"
+# 회차를 파일명으로 분리한다. 열린 루프 회차는 실행 모델과 커넥션 예산이 다르므로
+# 정본 3축 회차와 같은 이름 공간에 두면 안 된다.
+if [ "$RATE" -gt 0 ]; then
+  RESULT="results/conn-${LABEL}-size${SIZE}-rate${RATE}${POOL:+-pool${POOL}}"
+else
+  RESULT="results/${LABEL}-size${SIZE}"
+fi
 
 # lsof 는 클라이언트측·서버측 소켓을 각각 세므로 실제 커넥션은 절반이다.
 conn_count() {
@@ -82,7 +96,11 @@ cpu_seconds() {
     awk -F: '{ if (NF==3) printf "%.2f", $1*3600+$2*60+$3; else if (NF==2) printf "%.2f", $1*60+$2; else printf "0" }'
 }
 
-echo "▶ $TRANSPORT / size=$SIZE / ${VUS}VU / $DURATION"
+if [ "$RATE" -gt 0 ]; then
+  echo "▶ $TRANSPORT / size=$SIZE / ${RATE}req/s 고정 / $DURATION / 풀 라벨=${POOL:-미지정}"
+else
+  echo "▶ $TRANSPORT / size=$SIZE / ${VUS}VU / $DURATION"
+fi
 echo "  대상 포트 :$TARGET_PORT, profile-server PID=$PID"
 if [ "$TRANSPORT" = "grpc" ]; then
   echo "  상류 스레드: $THREAD_MODE (gRPC 경로는 Netty 라 이 값과 무관)"
@@ -92,14 +110,17 @@ fi
 echo
 
 # 워밍업. JIT 미적용 구간을 측정에서 제외한다.
+# 열린 루프 회차에서도 워밍업은 닫힌 루프로 돌린다(RATE=0). 워밍업 목적은 JIT 예열이므로
+# 과부하를 만들 이유가 없다.
 echo "  워밍업 ($WARMUP)..."
-TRANSPORT=$TRANSPORT SIZE=$SIZE VUS=10 DURATION=$WARMUP \
+TRANSPORT=$TRANSPORT SIZE=$SIZE VUS=10 DURATION=$WARMUP RATE=0 \
   k6 run --quiet --summary-mode=disabled k6/service-to-service.js >/dev/null 2>&1
 
 CPU_BEFORE=$(cpu_seconds)
 
 # 본 측정
 TRANSPORT=$TRANSPORT SIZE=$SIZE VUS=$VUS DURATION=$DURATION \
+  RATE=$RATE PRE_VUS=$PRE_VUS MAX_VUS=$MAX_VUS \
   k6 run --summary-export="${RESULT}.json" \
   k6/service-to-service.js > "${RESULT}.log" 2>&1 &
 K6_PID=$!
@@ -118,7 +139,7 @@ CPU_AFTER=$(cpu_seconds)
 echo
 echo "  [결과]"
 echo "    CPU 소비  : $(awk -v a="$CPU_AFTER" -v b="$CPU_BEFORE" 'BEGIN{printf "%.2f", a-b}') 초 (부하 구간)"
-grep -E "iterations\.|http_req_duration|upstream_micros|checks_succeeded" \
+grep -E "iterations|http_req_duration|http_req_failed|upstream_micros|checks_succeeded|dropped" \
   "${RESULT}.log" | sed 's/^/    /'
 echo
 echo "  상세 로그 : ${RESULT}.log"
