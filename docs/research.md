@@ -36,7 +36,7 @@
 
 ### 실무에 미치는 영향
 
-Boot 버전별로 선택지가 갈린다.
+Boot 버전별로 선택지가 다르다.
 
 | Boot 버전 | 선택지 | 상태 |
 |-----------|--------|------|
@@ -78,9 +78,9 @@ gRPC 는 호출 결과 상태를 응답 본문이 아니라 **HTTP/2 trailer**(�
 | grpc-gateway | HTTP/1.1 + JSON | HTTP/2 + protobuf | JSON (REST 와 동일) |
 | grpc-web + Envoy | HTTP/1.1 + protobuf 프레임 | HTTP/2 + protobuf | 바이너리 |
 
-**grpc-gateway 를 도입하면 브라우저 쪽은 그냥 REST 다.** 서버가 gRPC 라는 사실이 클라이언트에게 보이지 않고, 데브툴에도 프로토버프가 나타나지 않는다. 이 사실이 "gRPC 를 쓰면 데브툴에서 프로토버프가 보인다"는 흔한 기대와 어긋난다.
+**grpc-gateway 를 도입하면 브라우저 쪽은 그냥 REST 다.** 서버가 gRPC 라는 사실이 클라이언트에게 보이지 않고, 데브툴에도 Protobuf 가 나타나지 않는다. 이 사실이 "gRPC 를 쓰면 데브툴에서 Protobuf 가 보인다"는 흔한 기대와 어긋난다.
 
-프로토버프가 실제로 어떤 바이트로 오가는지 눈으로 보려면 grpc-web 경로가 필요하다. Envoy 의 `grpc_web` 필터가 브라우저의 base64/바이너리 프레임을 gRPC 프레임으로 변환한다.
+Protobuf 가 실제로 어떤 바이트로 오가는지 눈으로 보려면 grpc-web 경로가 필요하다. Envoy 의 `grpc_web` 필터가 브라우저의 base64/바이너리 프레임을 gRPC 프레임으로 변환한다.
 
 Envoy 를 쓰는 것은 스택상으로도 자연스럽다. Istio 의 데이터플레인이 Envoy 이므로, 서비스 메시를 쓰는 환경에서는 이미 경로에 들어 있는 컴포넌트다.
 
